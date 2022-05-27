@@ -7,6 +7,10 @@ proc ModulesHelp { } {
 
 module-whatis "Loads libraries needed for running SRW in a singularity container"
 
-setenv CONDA_DEFAULT_ENV "regional_workflow"
+module use -a /opt/hpc-modules/modulefiles/core
+module load miniconda3
 
+if { [module-info mode load] } {
+   system "conda activate regional_workflow;"
+}
 

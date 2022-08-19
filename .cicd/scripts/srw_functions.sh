@@ -43,7 +43,7 @@ function SRW_wflow_status() # [internal] used to determine state of an e2e test
     local result=""
     local rc=0
     
-    result=$(echo "$log_data" | cut -d: -f2-)
+    result=$(echo "$log_data" | cut -d: -f2- | tail -1)
     if [[ 0 == $? ]]; then
         rc=1
         echo "$result" | egrep -i 'IN PROGRESS|SUCCESS|FAILURE' > /dev/null || result=PENDING

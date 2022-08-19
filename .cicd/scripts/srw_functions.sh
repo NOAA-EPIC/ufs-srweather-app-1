@@ -1,11 +1,19 @@
 #
 # bash functions to support CI/CD jobs for ufs-srweather-app (SRW) 
-# Usage: [SRW_DEBUG=true] source srw_functions.sh
+# Usage:
+#     export NODE_NAME=<build_node>
+#     export SRW_COMPILER="intel" | "gnu"
+#     [SRW_DEBUG=true] source path/to/scripts/srw_functions.sh
 #
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+
 if [[ ${SRW_DEBUG} == true ]] ; then
+    echo "script_file=$(pwd)/${BASH_SOURCE[0]}"
+    #echo "script_dir=$script_dir"
     echo "export NODE_NAME=${NODE_NAME}"
     echo "export SRW_COMPILER=${SRW_COMPILER}"
+    grep "^function " ${BASH_SOURCE[0]}
 fi
 
 function SRW_list_repos() # show a table of latest commit IDs of all repos/sub-repos at PWD
@@ -52,4 +60,4 @@ function SRW_save_tests() # Save SRW E2E tests to persistent storage, cluster_no
     fi
 }
 
-[[ ${SRW_DEBUG} == true ]] && ( set | grep "()" | grep "^SRW_" )
+#[[ ${SRW_DEBUG} == true ]] && ( set | grep "()" | grep "^SRW_" )

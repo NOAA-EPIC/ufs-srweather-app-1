@@ -37,6 +37,29 @@ function SRW_has_cron_entry() # Are there any srw-build-* experiment crons runni
     crontab -l | grep "ufs-srweather-app/srw-build-${SRW_COMPILER:-"intel"}/expt_dirs/$dir"
 }
 
+function SRW_get_details() # Use rocotostat to generate detailed test results
+{
+  local startTime="$1"
+  local opt="$2"
+  local log_file=""
+  local workspace=${WORKSPACE:-"."}
+  echo ""
+  echo "#### started $startTime"
+  echo "#### checked $(date)"
+  echo "#### ${SRW_COMPILER}-${PLATFORM:-"${NODE_NAME,,}"} ${JOB_NAME:-$(git config --get remote.origin.url 2>/dev/null)} -b ${GIT_BRANCH:-$(git symbolic-ref --short HEAD 2>/dev/null)}"
+  echo "#### rocotostat -w "FV3LAM_wflow.xml" -d "FV3LAM_wflow.db" -v 10 $opt"
+  echo ""
+  for dir in $(cat ${WORKSPACE}/regional_workflow/tests/WE2E/expts_file.txt 2>/dev/null) ; do
+    log_file=$(cd ${WORKSPACE}/expt_dirs/$dir/ 2>/dev/null && ls -1 log.launch_* 2>/dev/null)
+    (
+    echo "# rocotostat $dir/$log_file:"
+    cd ${WORKSPACE}/expt_dirs/$dir/ && rocotostat -w "FV3LAM_wflow.xml" -d "FV3LAM_wflow.db" -v 10 $opt 2>/dev/null
+    echo ""
+    )
+  done
+  echo "####"
+}
+
 function SRW_save_tests() # Save SRW E2E tests to persistent storage, cluster_noaa hosts only 
 {
     local SRW_SAVE_DIR="$1"

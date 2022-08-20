@@ -57,6 +57,49 @@ function SRW_wflow_status() # [internal] used to determine state of an e2e test
     return $rc
 }
 
+function SRW_check_progress() # [internal] used to report total progress of all e2e tests
+{
+    local status_file="$1"
+    local log_file=""
+    local result=""
+    local rc=0
+    local workspace=${WORKSPACE:-"."}
+    export TEST_DIR=${workspace}/regional_workflow/tests/WE2E
+    
+    in_progress=false
+    failures=0
+    missing=0
+
+    echo "# status_file=${status_file} [$([[ -f ${status_file} ]] && echo 'true' || echo 'false')]"
+    echo "#### checked $(date)" | tee ${workspace}/test-data.txt
+    
+    lines=$(egrep '^Checking workflow status of |^Workflow status: ' $status_file 2>/dev/null \
+    | sed -z 's| ...\nWorkflow|:Workflow|g' | tee -a ${workspace}/test-data.txt \
+    | sed 's|Checking workflow status of experiment ||g' \
+    | sed 's|Workflow status:  ||g' \
+    | tr -d '"')
+    
+    for dir in $(cat ${TEST_DIR}/expts_file.txt) ; do
+        log_file=$(cd ${workspace}/expt_dirs/$dir/ 2>/dev/null && ls -1 log.launch_* 2>/dev/null)
+	    [[ -n "$log_file" ]] && log_size=$(wc -c ${workspace}/expt_dirs/$dir/$log_file 2>/dev/null | awk '{print $1}') || log_size="'$log_file'"
+        log_data="$(echo "$lines" | grep $dir)"
+        result=$(SRW_wflow_status "$log_data")
+        rc=$?
+        echo "[$rc] $result $dir/$log_file [$log_size]"
+        [[ 1 == $rc ]] && in_progress=true
+        if [[ 0 == $rc ]]; then
+            [[ $result =~ SUCCESS ]] || (( failures++ ))    # count FAILED test suites
+        fi
+        [[ 9 == $rc ]] && (( missing++ ))    # if log file is 'Not Found', count as missing
+        #[[ 9 == $rc ]] && (( failures++ ))   # ... also count log file 'Not Found' as FAILED?
+    done
+    
+    [[ $in_progress == true ]] && return $failures                # Not all completed ...
+  
+    # All Completed! return FAILURE count.
+    return $failures
+}
+
 function SRW_get_details() # Use rocotostat to generate detailed test results
 {
     local startTime="$1"
@@ -69,11 +112,11 @@ function SRW_get_details() # Use rocotostat to generate detailed test results
     echo "#### ${SRW_COMPILER}-${PLATFORM:-"${NODE_NAME,,}"} ${JOB_NAME:-$(git config --get remote.origin.url 2>/dev/null)} -b ${GIT_BRANCH:-$(git symbolic-ref --short HEAD 2>/dev/null)}"
     echo "#### rocotostat -w "FV3LAM_wflow.xml" -d "FV3LAM_wflow.db" -v 10 $opt"
     echo ""
-    for dir in $(cat ${WORKSPACE}/regional_workflow/tests/WE2E/expts_file.txt 2>/dev/null) ; do
-        log_file=$(cd ${WORKSPACE}/expt_dirs/$dir/ 2>/dev/null && ls -1 log.launch_* 2>/dev/null)
+    for dir in $(cat ${workspace}/regional_workflow/tests/WE2E/expts_file.txt 2>/dev/null) ; do
+        log_file=$(cd ${workspace}/expt_dirs/$dir/ 2>/dev/null && ls -1 log.launch_* 2>/dev/null)
         (
         echo "# rocotostat $dir/$log_file:"
-        cd ${WORKSPACE}/expt_dirs/$dir/ && rocotostat -w "FV3LAM_wflow.xml" -d "FV3LAM_wflow.db" -v 10 $opt 2>/dev/null
+        cd ${workspace}/expt_dirs/$dir/ && rocotostat -w "FV3LAM_wflow.xml" -d "FV3LAM_wflow.db" -v 10 $opt 2>/dev/null
         echo ""
         )
     done

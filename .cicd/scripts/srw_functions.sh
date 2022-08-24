@@ -146,4 +146,24 @@ function SRW_save_tests() # Save SRW E2E tests to persistent storage, cluster_no
     fi
 }
 
+function SRW_plot_allvars() # Plot data from SRW E2E test, and prepare latest ones for archiving.
+{
+    local dir="$1"
+    local PDATA_PATH="$2"
+    local workspace=${WORKSPACE:-"."}
+    (
+    cd ${workspace}/regional_workflow/ush/Python
+    source ${workspace}/expt_dirs/$dir/var_defns.sh >/dev/null
+    CDATE=${DATE_FIRST_CYCL}${CYCL_HRS}
+    echo "#### plot_allvars()  ${CDATE} ${EXTRN_MDL_LBCS_OFFSET_HRS} ${FCST_LEN_HRS} ${LBC_SPEC_INTVL_HRS} ${workspace}/expt_dirs/$dir ${PDATA_PATH}/NaturalEarth ${PREDEF_GRID_NAME}"
+        python plot_allvars.py ${CDATE} ${EXTRN_MDL_LBCS_OFFSET_HRS} ${FCST_LEN_HRS} ${LBC_SPEC_INTVL_HRS} ${workspace}/expt_dirs/$dir ${PDATA_PATH}/NaturalEarth ${PREDEF_GRID_NAME}
+        last=$(ls -rt1 ${workspace}/expt_dirs/$dir/${CDATE}/postprd/*.png | tail -1 | awk -F_ '{print $NF}')
+        [[ -n ${last} ]] || return 1
+        echo "# Saving plots from postprd/*${last} -> expt_plots/$dir/${CDATE}"
+        ( cd ${workspace}/ && ls -rt1 -l expt_dirs/$dir/${CDATE}/postprd/*${last} ; )
+        mkdir -p ${workspace}/expt_plots/$dir/${CDATE}
+        cp -p ${workspace}/expt_dirs/$dir/${CDATE}/postprd/*${last} ${workspace}/expt_plots/$dir/${CDATE}/.
+    )
+}
+
 #[[ ${SRW_DEBUG} == true ]] && ( set | grep "()" | grep "^SRW_" )

@@ -132,7 +132,7 @@ function SRW_e2e_status() # Get the status of E2E tests, and keep polling if the
         ${WE2E_dir}/get_expts_status.sh expts_basedir=${workspace}/expt_dirs num_log_lines=$num_log_lines > ${workspace}/tmp/test-status.txt
         status_file=$(grep "  expts_status_fp = " ${workspace}/tmp/test-status.txt | cut -d\" -f2)
         mv ${status_file} ${workspace}/tmp/test-details.txt 2>/dev/null
-        result=$(_check_progress ${workspace}/tmp/test-details.txt)
+        result=$(SRW_check_progress ${workspace}/tmp/test-details.txt)
         failures=$?
         completed=$(echo "$result" | egrep -v '^#|IN PROGRESS|PENDING' | wc -l)
         remaining=$(echo "$result" | egrep    'IN PROGRESS|PENDING' | wc -l)

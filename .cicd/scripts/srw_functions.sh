@@ -71,10 +71,10 @@ function SRW_check_progress() # [internal] used to report total progress of all 
     missing=0
 
     echo "# status_file=${status_file} [$([[ -f ${status_file} ]] && echo 'true' || echo 'false')]"
-    echo "#### checked $(date)" | tee ${workspace}/test-data.txt
+    echo "#### checked $(date)" | tee ${TEST_DIR}/expts_status.txt
     
     lines=$(egrep '^Checking workflow status of |^Workflow status: ' $status_file 2>/dev/null \
-    | sed -z 's| ...\nWorkflow|:Workflow|g' | tee -a ${workspace}/test-data.txt \
+    | sed -z 's| ...\nWorkflow|:Workflow|g' | tee -a ${TEST_DIR}/expts_status.txt \
     | sed 's|Checking workflow status of experiment ||g' \
     | sed 's|Workflow status:  ||g' \
     | tr -d '"')

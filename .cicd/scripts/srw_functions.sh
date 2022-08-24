@@ -43,7 +43,7 @@ function SRW_wflow_status() # [internal] used to determine state of an e2e test
     local result=""
     local rc=0
     
-    result=$(echo "$log_data" | cut -d: -f2- | tail -1)
+    result=$(echo "$log_data" | cut -d: -f1 | tail -1)
     if [[ 0 == $? ]]; then
         rc=1
         echo "$result" | egrep -i 'IN PROGRESS|SUCCESS|FAILURE' > /dev/null || result=PENDING
@@ -64,22 +64,25 @@ function SRW_check_progress() # [internal] used to report total progress of all 
     local result=""
     local rc=0
     local workspace=${WORKSPACE:-"."}
-    export TEST_DIR=${workspace}/regional_workflow/tests/WE2E
+    export WE2E_dir=${workspace}/regional_workflow/tests/WE2E
     
     in_progress=false
     failures=0
     missing=0
 
     echo "# status_file=${status_file} [$([[ -f ${status_file} ]] && echo 'true' || echo 'false')]"
-    echo "#### checked $(date)" | tee ${TEST_DIR}/expts_status.txt
+    echo "#### checked $(date)" | tee ${WE2E_dir}/expts_status.txt
     
     lines=$(egrep '^Checking workflow status of |^Workflow status: ' $status_file 2>/dev/null \
-    | sed -z 's| ...\nWorkflow|:Workflow|g' | tee -a ${TEST_DIR}/expts_status.txt \
+    | sed -z 's| ...\nWorkflow|:Workflow|g' \
     | sed 's|Checking workflow status of experiment ||g' \
     | sed 's|Workflow status:  ||g' \
-    | tr -d '"')
+    | tr -d '"' \
+    | awk -F: '{print $2 ":" $1}' \
+    | tee -a ${WE2E_dir}/expts_status.txt \
+    )
     
-    for dir in $(cat ${TEST_DIR}/expts_file.txt) ; do
+    for dir in $(cat ${WE2E_dir}/expts_file.txt) ; do
         log_file=$(cd ${workspace}/expt_dirs/$dir/ 2>/dev/null && ls -1 log.launch_* 2>/dev/null)
 	    [[ -n "$log_file" ]] && log_size=$(wc -c ${workspace}/expt_dirs/$dir/$log_file 2>/dev/null | awk '{print $1}') || log_size="'$log_file'"
         log_data="$(echo "$lines" | grep $dir)"
@@ -100,6 +103,53 @@ function SRW_check_progress() # [internal] used to report total progress of all 
     return $failures
 }
 
+function SRW_e2e_status() # Get the status of E2E tests, and keep polling if they are't done yet ...
+{
+    local poll_frequency="${1:-60}"          # (seconds) ... polling frequency between results log scanning
+    local num_log_lines="${2:-120}"
+    local report_file="$3"
+    local workspace=${WORKSPACE:-"."}
+    export WE2E_dir=${workspace}/regional_workflow/tests/WE2E
+
+    echo "#### Do we have any tests ?"
+    num_expts=$(cat ${WE2E_dir}/expts_file.txt 2>/dev/null | wc -l)
+    [[ 0 == $num_expts ]] && echo "# No E2E expts files found." && return 13
+    # If there are any test files, go poll their progress ... otherwise we are done.
+    num_files=$(cd ${workspace}/expt_dirs 2>/dev/null && ls -1 */log.launch_* 2>/dev/null | wc -l)
+    [[ 0 == $num_files ]] && echo "# No E2E test logs found." && return 14
+
+    echo "#### Let's poll if any E2E test suites FAILED, and report a total JOB_STATUS"
+    local rc=0
+    local result="### []"
+    local failures=0
+    local completed=0
+    local remaining=0
+    local missing=0
+
+    in_progress=true
+    mkdir -p ${workspace}/tmp
+    while [ $in_progress == true ] ; do
+        ${WE2E_dir}/get_expts_status.sh expts_basedir=${workspace}/expt_dirs num_log_lines=$num_log_lines > ${workspace}/tmp/test-status.txt
+        status_file=$(grep "  expts_status_fp = " ${workspace}/tmp/test-status.txt | cut -d\" -f2)
+        mv ${status_file} ${workspace}/tmp/test-details.txt 2>/dev/null
+        result=$(_check_progress ${workspace}/tmp/test-details.txt)
+        failures=$?
+        completed=$(echo "$result" | egrep -v '^#|IN PROGRESS|PENDING' | wc -l)
+        remaining=$(echo "$result" | egrep    'IN PROGRESS|PENDING' | wc -l)
+        missing=$(  echo "$result" | egrep    'Not Found'   | wc -l)
+        echo -e "$result\n completed=$completed failures=$failures remaining=$remaining missing=$missing"
+        if [[ $result =~ 'IN PROGRESS' ]] || [[ $result =~ 'PENDING' ]] ; then
+            in_progress=true
+            echo "#### ... poll every $poll_frequency seconds to see if all test suites are complete ..."
+            sleep $poll_frequency
+        else
+            in_progress=false
+        fi
+    done
+    echo -e "#### $(date)\n#### ${SRW_COMPILER}-${NODE_NAME} ${JOB_NAME} -b ${GIT_BRANCH:-$(git symbolic-ref --short HEAD)}\n$result\n# completed=$completed failures=$failures missing=$missing" \
+        | tee ${report_file}
+}
+
 function SRW_get_details() # Use rocotostat to generate detailed test results
 {
     local startTime="$1"
@@ -109,7 +159,7 @@ function SRW_get_details() # Use rocotostat to generate detailed test results
     echo ""
     echo "#### started $startTime"
     echo "#### checked $(date)"
-    echo "#### ${SRW_COMPILER}-${PLATFORM:-"${NODE_NAME,,}"} ${JOB_NAME:-$(git config --get remote.origin.url 2>/dev/null)} -b ${GIT_BRANCH:-$(git symbolic-ref --short HEAD 2>/dev/null)}"
+    echo "#### ${SRW_COMPILER}-${NODE_NAME,,} ${JOB_NAME:-$(git config --get remote.origin.url 2>/dev/null)} -b ${GIT_BRANCH:-$(git symbolic-ref --short HEAD 2>/dev/null)}"
     echo "#### rocotostat -w "FV3LAM_wflow.xml" -d "FV3LAM_wflow.db" -v 10 $opt"
     echo ""
     for dir in $(cat ${workspace}/regional_workflow/tests/WE2E/expts_file.txt 2>/dev/null) ; do

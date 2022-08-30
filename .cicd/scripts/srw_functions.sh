@@ -183,8 +183,9 @@ function SRW_save_tests() # Save SRW E2E tests to persistent storage, cluster_no
         day_of_week="$(date '+%u')"
         mkdir -p ${SRW_SAVE_DIR}/${NODE_NAME}/$day_of_week || return 3
         echo "#### Saving SRW tests to ${SRW_SAVE_DIR}/${NODE_NAME}/$day_of_week/expt_dirs.tar"
+        touch build_properties.txt workspace_properties.txt
         tar cvpf ${SRW_SAVE_DIR}/${NODE_NAME}/$day_of_week/expt_dirs.tar \
-            build_properties.txt \
+            build_properties.txt workspace_properties.txt \
             builder.env builder.txt \
             build-info.env build-info.txt \
             launch-info.env launch-info.txt \

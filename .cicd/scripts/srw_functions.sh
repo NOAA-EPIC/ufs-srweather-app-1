@@ -176,7 +176,7 @@ function SRW_get_details() # Use rocotostat to generate detailed test results
 function SRW_save_tests() # Save SRW E2E tests to persistent storage, cluster_noaa hosts only 
 {
     local SRW_SAVE_DIR="$1"
-    echo "#### Saving SRW tests to ${SRW_SAVE_DIR}/${NODE_NAME}/$day_of_week/expt_dirs.tar"
+    echo "#### Saving SRW tests to ${SRW_SAVE_DIR}/${NODE_NAME}/day_of_week/expt_dirs.tar"
     [[ -n ${SRW_SAVE_DIR} ]] && [[ -d ${SRW_SAVE_DIR} ]] || return 1
     [[ -n ${NODE_NAME} ]] || return 2
     if [[ ${NODE_NAME} =~ cluster_noaa ]] && [[ -d ${SRW_SAVE_DIR} ]] ; then

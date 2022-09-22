@@ -179,7 +179,7 @@ function SRW_save_tests() # Save SRW E2E tests to persistent storage, cluster_no
     echo "#### Saving SRW tests to ${SRW_SAVE_DIR}/${NODE_NAME}/day_of_week/expt_dirs.tar"
     [[ -n ${SRW_SAVE_DIR} ]] && [[ -d ${SRW_SAVE_DIR} ]] || return 1
     [[ -n ${NODE_NAME} ]] || return 2
-    if [[ ${NODE_NAME} =~ cluster_noaa ]] && [[ -d ${SRW_SAVE_DIR} ]] ; then
+    if [[ ${NODE_NAME} =~ cluster ]] && [[ -d ${SRW_SAVE_DIR} ]] ; then
         day_of_week="$(date '+%u')"
         mkdir -p ${SRW_SAVE_DIR}/${NODE_NAME}/$day_of_week || return 3
         echo "#### Saving SRW tests to ${SRW_SAVE_DIR}/${NODE_NAME}/$day_of_week/expt_dirs.tar"

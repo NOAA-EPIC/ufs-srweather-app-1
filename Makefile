@@ -1,4 +1,9 @@
-PLATFORM ?= $(shell [[ $(shell hostname -s) =~ ^fe*[0-9] ]] && echo jet)
+PLATFORM ?= $(shell [[ $(shell hostname -s) =~ ^cheyenne*[0-9] ]] && echo cheyenne)
+PLATFORM ?= $(shell [[ $(shell hostname -s) =~     ^gaea*[0-9] ]] && echo gaea)
+PLATFORM ?= $(shell [[ $(shell hostname -s) =~      ^hfe*[0-9] ]] && echo hera)
+PLATFORM ?= $(shell [[ $(shell hostname -s) =~      ^tfe*[0-9] ]] && echo jet)
+PLATFORM ?= $(shell [[ $(shell hostname -s) =~       ^fe*[0-9] ]] && echo jet)
+PLATFORM ?= $(shell [[ $(shell hostname -s) =~        ^Orion-* ]] && echo orion)
 #PLATFORM ?= $(shell hostname -s)
 COMPILER ?= intel
 

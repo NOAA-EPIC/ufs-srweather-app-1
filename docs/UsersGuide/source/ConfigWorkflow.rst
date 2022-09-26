@@ -9,6 +9,8 @@ There is an extensive list of experiment parameters that a user can set when con
 
 The following is a list of the parameters in the ``config_defaults.sh`` file. For each parameter, the default value and a brief description is given. 
 
+.. _PlatEnv:
+
 Platform Environment
 ====================
 ``RUN_ENVIR``: (Default: "nco")
@@ -115,7 +117,7 @@ Cron is a job scheduler accessed through the command-line on UNIX-like operating
 Directory Parameters
 ====================
 ``EXPT_BASEDIR``: (Default: "")
-   The full path to the base directory inside of which the experiment directory (``EXPT_SUBDIR``) will be created. If this is not specified or if it is set to an empty string, it will default to ``${HOMErrfs}/../../expt_dirs``, where ``${HOMErrfs}`` contains the full path to the ``regional_workflow`` directory.
+   The full path to the base directory inside of which the experiment directory (``EXPT_SUBDIR``) will be created. If this is not specified or if it is set to an empty string, it will default to ``${HOMEdir}/../../expt_dirs``, where ``${HOMEdir}`` contains the full path to the ``regional_workflow`` directory.
 
 ``EXPT_SUBDIR``: (Default: "")
    A descriptive name of the user's choice for the experiment directory (*not* its full path). The full path to the experiment directory, which will be contained in the variable ``EXPTDIR``, will be:

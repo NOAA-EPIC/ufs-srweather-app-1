@@ -30,7 +30,7 @@ build: env
 
 clean:
 	rm -rf build
-	rm -rf bin
+	rm -rf bin exec
 	rm -rf share
 	rm -rf include
 	rm -f lib/*.a lib/cmake/*/*.cmake

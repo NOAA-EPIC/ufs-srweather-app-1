@@ -12,7 +12,8 @@ COMPILER ?= intel
 default: usage
 
 env:
-	hostname -a || hostname -f || hostname -s
+	hostname -a
+	hostname -f || hostname -s
 	@echo "PLATFORM=${PLATFORM}"
 	@echo "COMPILER=${COMPILER}"
 

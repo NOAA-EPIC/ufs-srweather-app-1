@@ -27,12 +27,16 @@ build: env
 	./manage_externals/checkout_externals
 	./devbuild.sh --platform=${PLATFORM} --compiler=${COMPILER}
 
+devclean:
+	./devclean.sh --platform=${PLATFORM} --compiler=${COMPILER} --clean --sub-modules
+
 clean:
-	rm -rf build
-	rm -rf bin
 	rm -rf share
 	rm -rf include
 	rm -f lib/*.a lib/cmake/*/*.cmake
+	rm -f manage_externals/manic/*.pyc
+	rm -rf bin exec
+	echo "rm -rf build"
 	${MAKE} show
 	@echo "... maybe also try 'make clean-subs'"
 
@@ -44,7 +48,7 @@ subs := $(shell find . -name .git -type d | sed 's|/.git||g' )
 status:;git status
 	-@for sub in ${subs} ; do [[ $$sub != "." ]] && ( set -x ; git -C $$sub status ); done
 	
-clean-subs: clean
+clean-subs:
 	-@for sub in ${subs} ; do [[ $$sub != "." ]] && ( set -x ; rm -rf $$sub ); done
 
 revert: clean; git clean -dfx                  # remove non-committed stuff from work-tree

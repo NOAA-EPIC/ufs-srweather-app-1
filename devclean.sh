@@ -166,7 +166,7 @@ else
 fi
 
 # default is to Check for remaining new files
-if [[ VERBOSE == true ]] ; then
+if [ "${VERBOSE}" = true ] ; then
   printf "VERBOSE - find anything new by NOT using gitignore ..."
   for f in $(find . -name .gitignore -type f) ; do ( mv $f $(dirname $f)/DONTignore ; )  ; done
   git status | egrep -v "DONTignore|.gitignore"

@@ -15,13 +15,13 @@ OPTIONS
   --build-dir=BUILD_DIR
       build directory
   --bin-dir=BIN_DIR
-      installation binary directory name ("exec" by default; any name is available)
+      executable binary directory name ("exec" by default; any name is available)
   --build-jobs=BUILD_JOBS
       number of build jobs; defaults to 4
   --sub-modules
       remove sub-component modules 
   -v, --verbose
-      build with verbose output
+      show verbose output
 
 default = show all new files
 
@@ -127,14 +127,12 @@ COMPILER="${COMPILER,,}"
 
 set -eu
 
-printf "COMPILER=${COMPILER}\n" >&2
-
 # print settings
 if [ "${VERBOSE}" = true ] ; then
   settings
 fi
 
-# if build directory already exists then exit
+# remove just build directory or clean out all build artifacts
 if [ "${REMOVE}" = true ]; then
   printf "Remove build directory\n"
   printf "  BUILD_DIR=${BUILD_DIR}\n\n"
@@ -168,7 +166,8 @@ else
 fi
 
 # default is to Check for remaining new files
-if [[ CLEAN == false ]] && [[ REMOVE == false ]] ; then
+if [[ VERBOSE == true ]] ; then
+  printf "VERBOSE - find anything new by NOT using gitignore ..."
   for f in $(find . -name .gitignore -type f) ; do ( mv $f $(dirname $f)/DONTignore ; )  ; done
   git status | egrep -v "DONTignore|.gitignore"
   for f in $(find . -name DONTignore -type f) ; do ( mv $f $(dirname $f)/.gitignore ; )  ; done

@@ -3,17 +3,11 @@
 # usage instructions
 usage () {
 cat << EOF_USAGE
-Usage: $0 [OPTIONS] ...
+Usage: $0 --clean [OPTIONS] ...
 
 OPTIONS
   -h, --help
       show this help guide
-  -p, --platform=PLATFORM
-      name of machine you are building on
-      (e.g. cheyenne | hera | jet | orion | wcoss2)
-  -c, --compiler=COMPILER
-      compiler to use; default depends on platform
-      (e.g. intel | gnu | cray | gccgfortran)
   --remove
       removes existing build directory
   --clean
@@ -126,46 +120,12 @@ while :; do
   shift
 done
 
-# choose default apps to build
-if [ "${DEFAULT_BUILD}" = true ]; then
-  BUILD_UFS="on"
-  BUILD_UFS_UTILS="on"
-  BUILD_UPP="on"
-fi
-
 # Ensure uppercase / lowercase ============================================
 APPLICATION="${APPLICATION^^}"
 PLATFORM="${PLATFORM,,}"
 COMPILER="${COMPILER,,}"
 
-# check if PLATFORM is set
-#if [ -z $PLATFORM ] ; then
-#  printf "\nERROR: Please set PLATFORM.\n\n"
-#  usage
-#  exit 0
-#fi
-
-# set PLATFORM (MACHINE)
-MACHINE="${PLATFORM}"
-printf "PLATFORM(MACHINE)=${PLATFORM}\n" >&2
-
 set -eu
-
-# automatically determine compiler
-if [ -z "${COMPILER}" ] ; then
-  case ${PLATFORM} in
-    jet|hera|gaea) COMPILER=intel ;;
-    orion) COMPILER=intel ;;
-    wcoss2) COMPILER=intel ;;
-    cheyenne) COMPILER=intel ;;
-    macos,singularity) COMPILER=gnu ;;
-    odin,noaacloud) COMPILER=intel ;;
-    *)
-      COMPILER=intel
-      printf "WARNING: Setting default COMPILER=intel for new platform ${PLATFORM}\n" >&2;
-      ;;
-  esac
-fi
 
 printf "COMPILER=${COMPILER}\n" >&2
 
@@ -173,20 +133,6 @@ printf "COMPILER=${COMPILER}\n" >&2
 if [ "${VERBOSE}" = true ] ; then
   settings
 fi
-
-# set MODULE_FILE for this platform/compiler combination
-MODULE_FILE="build_${PLATFORM}_${COMPILER}"
-if [ ! -f "${SRW_DIR}/modulefiles/${MODULE_FILE}" ]; then
-#  printf "ERROR: module file does not exist for platform/compiler\n" >&2
-  printf "  MODULE_FILE=${MODULE_FILE}\n" >&2
-  printf "  PLATFORM=${PLATFORM}\n" >&2
-  printf "  COMPILER=${COMPILER}\n\n" >&2
-  #printf "Please make sure PLATFORM and COMPILER are set correctly\n" >&2
-  #usage >&2
-  #exit 64
-fi
-
-printf "MODULE_FILE=${MODULE_FILE}\n" >&2
 
 # if build directory already exists then exit
 if [ "${REMOVE}" = true ]; then
@@ -221,11 +167,13 @@ else
   fi
 fi
 
-git status
-
-# Check for remaining new files
-  #for f in $(find . -name .gitignore -type f) ; do ( mv $f $(dirname $f)/DONTignore ; )  ; done
-  #git status | egrep -v "DONTignore|.gitignore"
-  #for f in $(find . -name DONTignore -type f) ; do ( mv $f $(dirname $f)/.gitignore ; )  ; done
+# default is to Check for remaining new files
+if [[ CLEAN == false ]] && [[ REMOVE == false ]] ; then
+  for f in $(find . -name .gitignore -type f) ; do ( mv $f $(dirname $f)/DONTignore ; )  ; done
+  git status | egrep -v "DONTignore|.gitignore"
+  for f in $(find . -name DONTignore -type f) ; do ( mv $f $(dirname $f)/.gitignore ; )  ; done
+else
+  git status
+fi
 
 exit 0

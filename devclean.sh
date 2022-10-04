@@ -167,12 +167,15 @@ fi
 
 # default is to Check for remaining new files
 if [ "${VERBOSE}" = true ] ; then
-  printf "VERBOSE - find anything new by NOT using gitignore ..."
+  printf "VERBOSE - show anything new by NOT using gitignore ..."
   for f in $(find . -name .gitignore -type f) ; do ( mv $f $(dirname $f)/DONTignore ; )  ; done
-  git status | egrep -v "DONTignore|.gitignore"
+  #git status | egrep -v "DONTignore|.gitignore"
+  git add --dry-run . 2>/dev/null | cut -d\' -f2 | egrep -v "DONTignore|.gitignore"
   for f in $(find . -name DONTignore -type f) ; do ( mv $f $(dirname $f)/.gitignore ; )  ; done
 else
-  git status
+  printf "show anything new created by the build ..."
+  #git status
+  git add --dry-run . 2>/dev/null | cut -d\' -f2
 fi
 
 exit 0

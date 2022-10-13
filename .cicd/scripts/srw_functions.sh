@@ -205,7 +205,8 @@ function SRW_plot_allvars() # Plot data from SRW E2E test, and prepare latest on
     (
     cd ${workspace}/regional_workflow/ush/Python
     source ${workspace}/expt_dirs/$dir/var_defns.sh >/dev/null
-    CDATE=${DATE_FIRST_CYCL}${CYCL_HRS}
+    echo "DATE_FIRST_CYCL=${DATE_FIRST_CYCL} CYCL_HRS=${CYCL_HRS} ALL_CDATES=${ALL_CDATES}"
+    CDATE=${ALL_CDATES}
     echo "#### plot_allvars()  ${CDATE} ${EXTRN_MDL_LBCS_OFFSET_HRS} ${FCST_LEN_HRS} ${LBC_SPEC_INTVL_HRS} ${workspace}/expt_dirs/$dir ${PDATA_PATH}/NaturalEarth ${PREDEF_GRID_NAME}"
         python plot_allvars.py ${CDATE} ${EXTRN_MDL_LBCS_OFFSET_HRS} ${FCST_LEN_HRS} ${LBC_SPEC_INTVL_HRS} ${workspace}/expt_dirs/$dir ${PDATA_PATH}/NaturalEarth ${PREDEF_GRID_NAME}
         last=$(ls -rt1 ${workspace}/expt_dirs/$dir/${CDATE}/postprd/*.png | tail -1 | awk -F_ '{print $NF}')
